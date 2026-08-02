@@ -6,6 +6,10 @@ This project is a web-based robot control panel developed using HTML, CSS, JavaS
 
 The application allows users to control the robot using control buttons or Speech to Text. The selected command is stored in a MySQL database and can be retrieved by the robot.
 
+## Live Demo
+
+🔗 https://jouryrobot.rf.gd
+
 ## Features
 
 - Forward
