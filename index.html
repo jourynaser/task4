@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>Control Pad</title>
+<style>
+  body {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    background: #fff;
+    font-family: Arial, Helvetica, sans-serif;
+  }
+
+  .control-pad {
+    display: grid;
+    grid-template-columns: repeat(3, 120px);
+    grid-template-rows: repeat(3, 70px);
+    gap: 20px;
+    justify-items: center;
+    align-items: center;
+    direction: ltr;
+  }
+
+  .btn {
+    width: 100%;
+    height: 100%;
+    border: 2px solid #ccc;
+    border-radius: 12px;
+    background: #fff;
+    font-size: 18px;
+    font-weight: bold;
+    color: #222;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: 0.2s ease;
+  }
+
+  .btn:hover { background: #f5f5f5; }
+  .btn.stop { border-color: red; }
+
+  .forward  { grid-column: 2; grid-row: 1; }
+  .left     { grid-column: 1; grid-row: 2; }
+  .stop     { grid-column: 2; grid-row: 2; }
+  .right    { grid-column: 3; grid-row: 2; }
+  .backward { grid-column: 2; grid-row: 3; }
+
+  #status {
+    margin-top: 25px;
+    font-size: 16px;
+    color: #444;
+  }
+</style>
+</head>
+<body>
+
+  <div class="control-pad">
+    <button class="btn forward"  onclick="sendCommand('forward')">forward</button>
+    <button class="btn left"     onclick="sendCommand('left')">left</button>
+    <button class="btn stop"     onclick="sendCommand('stop')">stop</button>
+    <button class="btn right"    onclick="sendCommand('right')">right</button>
+    <button class="btn backward" onclick="sendCommand('backward')">backward</button>
+  </div>
+
+  <button id="speechBtn" onclick="startSpeech()"
+    style="
+    margin-top:30px;
+    padding:14px 40px;
+    background:#87454F;
+    color:#FFEDDA;
+    border:none;
+    border-radius:10px;
+    font-size:18px;
+    cursor:pointer;">
+🎤 تحدث (Speech to Text)
+  </button>
+
+  <div id="status">جاهز</div>
+
+  <script>
+    function sendCommand(cmd) {
+      document.getElementById('status').innerText = 'جاري الإرسال...';
+
+      fetch('update_command.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'command=' + encodeURIComponent(cmd)
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.status === 'success') {
+          document.getElementById('status').innerText =
+            'تم تحديث الجدول: ' + data.button + ' -> "' + data.stored_as + '"';
+        } else {
+          document.getElementById('status').innerText = 'خطأ: ' + data.message;
+        }
+      })
+      .catch(err => {
+        document.getElementById('status').innerText = 'فشل الاتصال بالسيرفر';
+      });
+    }
+    function startSpeech() {
+
+    const SpeechRecognition =
+        window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+        alert("المتصفح لا يدعم Speech Recognition");
+        return;
+    }
+
+    const recognition = new SpeechRecognition();
+
+    recognition.lang = "en-US";
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    document.getElementById("status").innerText = "🎤 جاري الاستماع...";
+
+    recognition.start();
+
+    recognition.onresult = function(event) {
+
+        let text = event.results[0][0].transcript.toLowerCase().trim();
+
+        document.getElementById("status").innerText =
+            "تم التعرف على: " + text;
+
+        switch(text){
+
+            case "forward":
+                sendCommand("forward");
+                break;
+
+            case "backward":
+                sendCommand("backward");
+                break;
+
+            case "left":
+                sendCommand("left");
+                break;
+
+            case "right":
+                sendCommand("right");
+                break;
+
+            case "stop":
+                sendCommand("stop");
+                break;
+
+            default:
+                document.getElementById("status").innerText =
+                "الأمر غير معروف: " + text;
+        }
+
+    };
+
+    recognition.onerror = function(){
+
+        document.getElementById("status").innerText =
+        "فشل التعرف على الصوت";
+
+    };
+
+}
+  </script>
+
+</body>
+</html>
